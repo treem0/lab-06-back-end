@@ -80,10 +80,10 @@ function toLocation(/*geoData*/) {
 function toWeather(geoWeather) {
     const firstResult = geoWeather.currently.summary;
     const time = geoWeather.currently.time;
-    
+    const myDate = new Date(time);
     return {
         formatted_query: firstResult,
-        time: time
+        time: myDate
     };
 }
 
