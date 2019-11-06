@@ -35,7 +35,6 @@ const getWeatherResponse = async(lat, long) => {
 
     const actualWeatherData = JSON.parse(weatherData.text);
     const dailyArray = actualWeatherData.daily.data;
-    console.log(dailyArray);
     return dailyArray.map(day => { 
         return {
             forecast: day.summary,
@@ -43,6 +42,15 @@ const getWeatherResponse = async(lat, long) => {
         };
     });
 };
+
+// const getEventResponse = async(lat, long) => {
+//     const eventData = await superagent.get(`https://www.eventbriteapi.com/v3/events/search?token=${process.env.EVENTBRITE_API_KEY}&location.latitude=${lat}&location.longitude=${long}`);
+
+//     const actualEventData = JSON.parse(eventData.text);
+//     const eventArray = actualEventData;
+//     console.log(actualEventData);
+//     return actualEventData;
+// };
 
 const PORT = process.env.PORT || 3000;
 
@@ -63,6 +71,13 @@ app.get('/location', async(req, res) => {
 
     res.json(response);
 });
+
+// app.get('/events', async(req, res) => {
+//     const eventObject = await getEventResponse(latLngs.latitude, latLngs.longitude);
+
+//     res.json(eventObject);
+
+// });
 
 app.get('/weather', async(req, res) => {
     const weatherObject = await getWeatherResponse(latLngs.latitude, latLngs.longitude);
