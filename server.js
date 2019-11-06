@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const superagent = require('superagent');
 
 // Application Setup
 // - make an express app!
@@ -9,84 +10,65 @@ const cors = require('cors');
 // - enable CORS
 app.use(cors());
 
+let latLngs;
+
+const formatLocationResponse = locationItem => {
+    const {
+        geometry: {
+            location: {
+                lat,
+                lng,
+            },
+        },
+        formatted_address,
+    } = locationItem;
+    
+    return {
+        formatted_query: formatted_address,
+        latitude: lat,
+        longitude: lng,
+    };
+}; 
+
+const getWeatherResponse = async(lat, long) => {
+    const weatherData = await superagent.get(`https://api.darksky.net/forecast/${process.env.DARKSKY_API_KEY}/${lat},${long}`);
+
+    const actualWeatherData = JSON.parse(weatherData.text);
+    const dailyArray = actualWeatherData.daily.data;
+    console.log(dailyArray);
+    return dailyArray.map(day => { 
+        return {
+            forecast: day.summary,
+            time: new Date(day.time * 1000).toDateString(),
+        };
+    });
+};
+
 const PORT = process.env.PORT || 3000;
 
 app.use(express.static('./public'));
 
-app.get('/location', (request, response) => {
-    try {
-        // use express built-in query object
-        const location = request.query.location;
-        const result = getLatLng(location);
-        response.status(200).json(result);
-    }
-    catch (err) {
-        // TODO: make an object and send via .json...
-        response.status(500).send('Sorry something went wrong, please try again');
-    }
+app.get('/location', async(req, res) => {
+
+    const searchQuery = req.query.search;
+
+    const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
+
+    const locationItem = await superagent.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${searchQuery}&key=${GEOCODE_API_KEY}`);
+
+    const actualItem = JSON.parse(locationItem.text).results[0];
+    const response = formatLocationResponse(actualItem);
+
+    latLngs = response;
+
+    res.json(response);
 });
 
-app.get('/weather', (request, response) => {
-    try {
-        // use express built-in query object
-        const weather = request.query.weather;
-        const result = getWeather(weather);
-        response.status(200).json(result);
-    }
-    catch (err) {
-        // TODO: make an object and send via .json...
-        response.status(500).send('Sorry something went wrong, please try again');
-    }
+app.get('/weather', async(req, res) => {
+    const weatherObject = await getWeatherResponse(latLngs.latitude, latLngs.longitude);
+
+    res.json(weatherObject);
 });
-const geoData = require('./data/geo.json');
-const geoWeather = require('./data/darksky.json');
-// Helper Functions
-function getLatLng(location) {
-    // simulate an error if special "bad location" is provided:
-    if (location === 'bad location') {
-        throw new Error();
-    }
-
-    // ignore location for now, return hard-coded file
-    // api call will go here
-
-    // convert to desired data format:
-    return toLocation(geoData);
-}
-function getWeather(weather) {
-    // simulate an error if special "bad location" is provided:
-    if (weather === 'bad weather') {
-        throw new Error();
-    }
-
-    // ignore location for now, return hard-coded file
-    // api call will go here
-
-    // convert to desired data format:
-    return toWeather(geoWeather);
-}
-
-function toLocation(/*geoData*/) {
-    const firstResult = geoData.results[0];
-    const geometry = firstResult.geometry;
-    
-    return {
-        formatted_query: firstResult.formatted_address,
-        latitude: geometry.location.lat,
-        longitude: geometry.location.lng
-    };
-}
-
-function toWeather(geoWeather) {
-    const firstResult = geoWeather.currently.summary;
-    const time = geoWeather.currently.time;
-    const myDate = new Date(time);
-    return {
-        forecast: firstResult,
-        time: myDate
-    };
-}
-
 
 
 app.listen(PORT, () => {
