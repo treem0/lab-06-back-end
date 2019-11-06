@@ -82,7 +82,7 @@ function toWeather(geoWeather) {
     const time = geoWeather.currently.time;
     const myDate = new Date(time);
     return {
-        formatted_query: firstResult,
+        forecast: firstResult,
         time: myDate
     };
 }
