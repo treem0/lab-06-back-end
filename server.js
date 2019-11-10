@@ -65,6 +65,13 @@ const getTrailResponse = async(lat, long) => {
     });
 };
 
+const getYelpResponse = async(lat, long) => {
+    const yelpData = await superagent.get(`https://api.yelp.com/v3/businesses/search?latitude={lat}&longitude={lng}`);
+    
+    const actualYelpData = JSON.parse(yelpData.text);
+    
+}
+
 // const getEventResponse = async(lat, long) => {
 //     const eventData = await superagent.get(`https://www.eventbriteapi.com/v3/events/search?token=${process.env.EVENTBRITE_API_KEY}&location.latitude=${lat}&location.longitude=${long}`);
 
