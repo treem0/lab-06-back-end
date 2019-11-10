@@ -10,8 +10,6 @@ const superagent = require('superagent');
 // - enable CORS
 app.use(cors());
 
-let latLngs;
-
 const formatLocationResponse = locationItem => {
     const {
         geometry: {
@@ -66,10 +64,19 @@ const getTrailResponse = async(lat, long) => {
 };
 
 const getYelpResponse = async(lat, long) => {
-    const yelpData = await superagent.get(`https://api.yelp.com/v3/businesses/search?latitude={lat}&longitude={lng}`);
-    
+    const yelpData = await superagent.get(`https://api.yelp.com/v3/businesses/search?latitude=${lat}&longitude=${long}`)
+        .set('Authorization', `Bearer ${process.env.YELP_API_KEY}`);
     const actualYelpData = JSON.parse(yelpData.text);
-    
+    let yelpArray = actualYelpData.businesses;
+
+    return yelpArray.map(companies =>{
+        return {
+            name: companies.name,
+            image_url: companies.image_url,
+            rating: companies.rating,
+            url: companies.url
+        }
+    })
 }
 
 // const getEventResponse = async(lat, long) => {
@@ -86,39 +93,38 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static('./public'));
 
 app.get('/location', async(req, res) => {
-
     const searchQuery = req.query.search;
-
     const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
-
     const locationItem = await superagent.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${searchQuery}&key=${GEOCODE_API_KEY}`);
-
     const actualItem = JSON.parse(locationItem.text).results[0];
     const response = formatLocationResponse(actualItem);
-
-    latLngs = response;
 
     res.json(response);
 });
 
 // app.get('/events', async(req, res) => {
-//     const eventObject = await getEventResponse(latLngs.latitude, latLngs.longitude);
+//     const eventObject = await getEventResponse(req.query.latitude, req.query.longitude);
 
 //     res.json(eventObject);
 
 // });
 
 app.get('/weather', async(req, res) => {
-    const weatherObject = await getWeatherResponse(latLngs.latitude, latLngs.longitude);
+    const weatherObject = await getWeatherResponse(req.query.latitude, req.query.longitude);
 
     res.json(weatherObject);
+});
+
+app.get('/reviews', async(req, res) => {
+    const yelpObject = await getYelpResponse(req.query.latitude, req.query.longitude);
+
+    res.json(yelpObject);    
 });
 
 app.get('/trails', async(req, res) => {
     const trailObject = await getTrailResponse(req.query.latitude, req.query.longitude);
 
     res.json(trailObject);
-
 });
 
 
