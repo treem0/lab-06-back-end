@@ -75,9 +75,9 @@ const getYelpResponse = async(lat, long) => {
             image_url: companies.image_url,
             rating: companies.rating,
             url: companies.url
-        }
-    })
-}
+        };
+    });
+};
 
 // const getEventResponse = async(lat, long) => {
 //     const eventData = await superagent.get(`https://www.eventbriteapi.com/v3/events/search?token=${process.env.EVENTBRITE_API_KEY}&location.latitude=${lat}&location.longitude=${long}`);
