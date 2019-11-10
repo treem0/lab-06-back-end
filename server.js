@@ -127,7 +127,6 @@ app.get('/trails', async(req, res) => {
     res.json(trailObject);
 });
 
-
 app.listen(PORT, () => {
     console.log(`Listening on port ${PORT}`);
 });
